@@ -6,6 +6,54 @@ Web Application สำหรับงาน Automation และงานซ่�
 > **สถานะ:** branch `frontend-dev` คือ Frontend ช่วงพัฒนา ก่อนทดสอบเป็น production
 > ตอนนี้ใช้ **ข้อมูลจำลอง (mock data)** และ **login ทดลอง** ทีมจะต่อ Supabase ในขั้นถัดไป ดู [docs/supabase-handoff.md](docs/supabase-handoff.md)
 
+## สถานะงาน
+
+### ✅ สิ่งที่ทำแล้ว
+
+| หัวข้อตามโจทย์ | สถานะ | ไฟล์ / หมายเหตุ |
+|---|---|---|
+| UX/UI prototype | เสร็จ | branch `prototype-ux-ui` และโฟลเดอร์ `prototype/` |
+| 3.1 Login / Logout + Role | เสร็จ (ใช้บัญชีทดลอง) | `src/lib/auth/`, `src/app/login/` — รอเปลี่ยนเป็น Supabase Auth |
+| 3.2 Machine Master CRUD | เสร็จ | `src/app/(app)/machines/` |
+| 3.3 Alarm Record | เสร็จ | `src/app/(app)/alarms/` |
+| 3.4 Maintenance Record | เสร็จ | `src/app/(app)/maintenance/` |
+| 3.5 Search / Filter | เสร็จ | ทุกหน้ารายการ กรองได้ 2–5 เงื่อนไข |
+| 3.6 Dashboard | เสร็จ | `src/app/(app)/dashboard/` |
+| 3.7 Input Validation | เสร็จ | `src/lib/validation.ts` (ตรวจทั้งฟอร์มและ server) |
+| 3.9 GitHub + commit history | เสร็จ | commit แยกทีละขั้น |
+| 3.10 GitHub Actions CI | เสร็จ | `.github/workflows/ci.yml` — Install → Build → Type check → Lint → Test |
+| 3.12 README | เสร็จ | ไฟล์นี้ (เหลือใส่ Vercel URL) |
+| Bonus | เสร็จ | Role Viewer, กราฟ Alarm, Machine History, Maintenance Plan (PM), Audit Log, Dark Mode, Responsive, สถานะ Waiting Part, กรองตามช่วงวันที่ |
+
+### 📋 สิ่งที่ทีมต้องทำต่อ
+
+| ลำดับ | งาน | รายละเอียด | ข้อในโจทย์ |
+|---|---|---|---|
+| 1 | **ต่อ Supabase Database** | สร้างตารางตามหัวข้อ Database Structure ด้านล่าง ตั้ง constraint และ RLS แล้วแก้ฟังก์ชันใน `src/lib/data/repo.ts` ให้ query Supabase | 3.8 (15 คะแนน) |
+| 2 | **ต่อ Supabase Auth** | แทนที่ `src/lib/auth/session.ts` และ `credentials.ts` ด้วย `@supabase/ssr`, สร้างบัญชีผู้ใช้จริงและตาราง `profiles` | 3.1 |
+| 3 | **Deploy บน Vercel** | Import repo นี้ใน Vercel ตั้ง Environment Variables แล้วใส่ URL ในหัวข้อ Deployment | 3.11 |
+| 4 | **ทดสอบหลังต่อ Supabase** | ล็อกอินด้วย Technician/Viewer แล้วลองเปิดหน้า Admin และเรียก API ตรง ต้องถูกปฏิเสธ | 3.1, 3.8 |
+| 5 | **ปิดบัญชีทดลอง** | ตั้ง `DEMO_LOGIN=off` หรือลบ `credentials.ts` เมื่อใช้ Supabase Auth แล้ว | ความปลอดภัย |
+| 6 | **Screenshot + รายงานการใช้ AI** | ถ่ายหน้าจอทุกหน้า และเขียนรายงานสั้นโดยใช้ตาราง "การใช้ AI" ด้านล่างเป็นจุดเริ่ม | สิ่งที่ต้องส่ง 5, 6 |
+| 7 | **รวม branch** | เมื่อทดสอบผ่านแล้ว เปิด Pull Request จาก `frontend-dev` ไป branch หลักสำหรับ production | — |
+
+คู่มือต่อ Supabase ละเอียด (ตาราง, กฎที่ควรย้ายไปทำใน Postgres, ตาราง RLS ของแต่ละ Role): [docs/supabase-handoff.md](docs/supabase-handoff.md)
+
+## ข้อมูลตัวอย่าง (Mock Data)
+
+ตอนนี้ระบบ**ยังไม่มีฐานข้อมูลจริง** จึงใช้ข้อมูลตัวอย่างเพื่อให้ทุกหน้ามีข้อมูลให้ทดสอบ
+
+| เรื่อง | รายละเอียด |
+|---|---|
+| อยู่ที่ไหน | ข้อมูลเริ่มต้นอยู่ใน `src/lib/data/seed.ts`, ฟังก์ชันอ่าน/เขียนอยู่ใน `src/lib/data/repo.ts` |
+| มีอะไรบ้าง | ผู้ใช้ 4 บัญชี, เครื่องจักร 10 เครื่อง (M-001 ถึง M-010), Alarm 13 รายการ, งานซ่อม 8 งาน, แผน PM 9 แผน, Audit Log 3 รายการ |
+| วันที่ | สร้างย้อนหลังจาก "วันนี้" เสมอ กราฟ 7 วันและสถานะ PM (เกินกำหนด / ครบใน 7 วัน) จึงมีข้อมูลทุกครั้งที่เปิด |
+| เก็บที่ไหน | ในหน่วยความจำของ server — **เพิ่ม/แก้ไขได้ แต่จะรีเซ็ตทุกครั้งที่ server restart** และบน Vercel แต่ละ instance จะไม่เห็นข้อมูลของกันและกัน |
+| บัญชีทดลอง | รหัสผ่านตอนพัฒนา `REDACTED` — ใน production ไม่มีรหัสเริ่มต้น ต้องตั้ง `DEMO_PASSWORD` เอง หรือปิดด้วย `DEMO_LOGIN=off` |
+| ชื่อคนในข้อมูล | เป็นชื่อสมมติทั้งหมด ไม่ใช่ข้อมูลจริง |
+
+**เมื่อต่อ Supabase แล้ว:** หน้าเว็บจะอ่านข้อมูลจากฐานข้อมูลแทน `seed.ts` จะไม่ถูกใช้อีก จะลบทิ้ง หรือแปลงเป็น SQL insert เพื่อใส่ข้อมูลเริ่มต้นใน Supabase ก็ได้
+
 ## วัตถุประสงค์
 
 โรงงานบันทึก Alarm และงานซ่อมในหลายแหล่งข้อมูล ทำให้ค้นหาประวัติยาก ติดตามสถานะงานไม่ชัด และผู้เกี่ยวข้องเห็นข้อมูลไม่พร้อมกัน
