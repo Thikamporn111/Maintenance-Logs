@@ -2,20 +2,14 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { demoLoginEnabled } from "@/lib/auth/credentials";
-import { listUsers } from "@/lib/data/repo";
-import { ROLE_LABEL } from "@/lib/permissions";
 import { LoginForm } from "./LoginForm";
 
 export const metadata: Metadata = { title: "เข้าสู่ระบบ" };
 
 export default async function LoginPage() {
   if (await getCurrentUser()) redirect("/dashboard");
+  // Sign-in details are never shown on this page; the team shares them privately.
   const demo = demoLoginEnabled();
-  const accounts = demo
-    ? (await listUsers()).filter((u) => u.active).map((u) => ({ email: u.email, name: u.name, role: ROLE_LABEL[u.role] }))
-    : [];
-  // The demo password is only printed on screen during local development.
-  const demoPassword = demo && process.env.NODE_ENV !== "production" ? "REDACTED" : null;
 
   return (
     <div className="grid min-h-full md:grid-cols-[1.1fr_1fr]">
@@ -33,7 +27,7 @@ export default async function LoginPage() {
 |--[ MNT.OPEN   ]--[/ PART  ]---------( WO_REQ )--|`}</pre>
       </section>
       <main className="flex items-center justify-center px-4 py-8">
-        <LoginForm accounts={accounts} demoPassword={demoPassword} />
+        <LoginForm demoEnabled={demo} />
       </main>
     </div>
   );

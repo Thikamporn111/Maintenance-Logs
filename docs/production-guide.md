@@ -21,13 +21,13 @@
 ### A2. เปลี่ยน login ทดลองเป็น Supabase Auth
 
 1. ติดตั้ง `@supabase/ssr` และ `@supabase/supabase-js`
-2. ลบ `src/lib/auth/credentials.ts` (บัญชีทดลอง, รหัส `REDACTED`, rate limit แบบในหน่วยความจำ)
+2. ลบ `src/lib/auth/credentials.ts` (บัญชีทดลองของทีมพัฒนา และ rate limit แบบในหน่วยความจำ)
 3. ลบ `src/lib/auth/session.ts` และ `tests/session.test.ts` แล้วใช้ cookie session ของ `@supabase/ssr` แทน
 4. แก้ `src/lib/auth/dal.ts` ให้ `getCurrentUser()` เรียก `supabase.auth.getUser()` แล้วดึงแถวใน `profiles` (ต้องเช็กว่า `active = true`)
 5. แก้ `src/app/login/actions.ts` ให้เรียก `supabase.auth.signInWithPassword()`
 6. แก้หน้า Login
-   - `src/app/login/page.tsx`: ลบการดึงรายชื่อบัญชีทดลองและข้อความรหัสผ่าน
-   - `src/app/login/LoginForm.tsx`: ลบปุ่มเลือกบัญชีทดลอง (ส่วน `accounts.map(...)`)
+   - `src/app/login/page.tsx`: ลบ `demoLoginEnabled()`
+   - `src/app/login/LoginForm.tsx`: ลบกล่องข้อความ "เวอร์ชันทดลองสำหรับทีมพัฒนาเท่านั้น" แล้วเพิ่มลิงก์ลืมรหัสผ่าน และลิงก์สมัครสมาชิก (ถ้าเปิดให้สมัคร)
 7. แก้ `src/proxy.ts` ให้เช็ก cookie ของ Supabase แทน `ml_session`
 
 ### A3. ล้างค่าตั้งค่าของเดโม
@@ -41,14 +41,14 @@
 |---|---|
 | ผู้ใช้ | Supabase → Authentication → **Invite user** ด้วยอีเมลจริงของพนักงาน แล้วตั้ง `role` ใน `profiles` |
 | Admin คนแรก | ตั้ง `role = 'admin'` ด้วย SQL Editor ครั้งเดียว หลังจากนั้นให้ Admin จัดการผ่านหน้า Users |
-| สมัครสมาชิกเอง | **ปิด** (Authentication → Sign In / Providers → ปิด Allow new users to sign up) ให้เข้าได้เฉพาะคนที่ Admin เชิญ |
+| สมัครสมาชิก (Register) | เปิดได้ตอนเป็น Product เท่านั้น แนะนำ **แบบเชิญ**: ปิดการสมัครเอง (Authentication → Sign In / Providers → ปิด Allow new users to sign up) แล้วให้ Admin เชิญ ถ้าจำเป็นต้องเปิดสมัครเอง ผู้สมัครใหม่ต้องได้ Role `viewer` และ `active = false` จนกว่า Admin อนุมัติ และบังคับยืนยันอีเมล |
 | เครื่องจักร | เพิ่มผ่านหน้า Machines หรือ import CSV ใน Supabase Table Editor (ID ต้องเป็นรูปแบบ `M-000`) |
 | แผน PM | Admin สร้างผ่านหน้า Maintenance Plan ตามคู่มือบำรุงรักษาของแต่ละเครื่อง |
 
 ### A5. ตรวจว่าไม่เหลือของเดโม
 
 ```bash
-git grep -n -i -E "seed|REDACTED|plant\.local|__maintenanceLogsStore|ml_session"
+git grep -n -i -E "seed|DEMO_PASSWORD|DEMO_LOGIN|plant\.local|__maintenanceLogsStore|ml_session"
 ```
 
 ต้องไม่เจอใน `src/` (เจอใน `prototype/` และ `docs/` ได้) จากนั้นรัน `npm run build`, `npm run lint`, `npm test` ให้ผ่านทั้งหมด แล้วแก้หัวข้อ "ข้อมูลตัวอย่าง" ใน README
