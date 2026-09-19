@@ -1,6 +1,7 @@
 // Date helpers and state rules for preventive maintenance (PM) plans.
 // Plan dates are calendar dates (YYYY-MM-DD) in the plant's local time.
 import type { MaintenanceRecord, PmPlan } from "./types";
+import { plantDate } from "./time";
 
 export type PlanState = "overdue" | "soon" | "issued" | "ok";
 
@@ -24,8 +25,9 @@ export function parseDateStr(s: string): Date {
   return new Date(y, m - 1, d);
 }
 
+/** Today's date at the plant (UTC+7), regardless of the server's time zone. */
 export function todayStr(now: Date = new Date()): string {
-  return toDateStr(now);
+  return plantDate(now);
 }
 
 export function addDays(s: string, n: number): string {

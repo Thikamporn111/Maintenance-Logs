@@ -5,6 +5,7 @@ import {
   ALARM_STATUS, LOCATIONS, MACHINE_STATUS, MACHINE_TYPES, MNT_STATUS, MNT_TYPES, PM_INTERVALS,
 } from "./types";
 import { todayStr } from "./pm";
+import { parsePlantDateTime } from "./time";
 
 export type FieldErrors = Record<string, string>;
 export type FormState = { errors?: FieldErrors; values?: Record<string, string>; message?: string };
@@ -20,8 +21,8 @@ const text = (min: number, max: number, requiredMsg: string, lengthMsg: string) 
   z.string().trim().min(1, requiredMsg).min(min, lengthMsg).max(max, lengthMsg);
 const optionalText = (max: number) => z.string().trim().max(max, `ยาวได้ไม่เกิน ${max} ตัวอักษร`).default("");
 const upper = (s: unknown) => (typeof s === "string" ? s.trim().toUpperCase() : s);
-const isValidDateTime = (s: string) => !Number.isNaN(new Date(s).getTime());
-const isValidDate = (s: string) => DATE_RE.test(s) && isValidDateTime(`${s}T00:00:00`);
+const isValidDateTime = (s: string) => !Number.isNaN(parsePlantDateTime(s).getTime());
+const isValidDate = (s: string) => DATE_RE.test(s) && isValidDateTime(`${s}T00:00`);
 
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().min(1, "กรอกอีเมล").max(200).email("รูปแบบอีเมลไม่ถูกต้อง"),
@@ -42,7 +43,7 @@ export const alarmCreateSchema = z.object({
   description: text(4, 200, "กรอกรายละเอียด Alarm", "รายละเอียดต้องยาว 4–200 ตัวอักษร"),
   occurredAt: z.string().min(1, "ระบุวันที่และเวลาที่เกิด")
     .refine(isValidDateTime, "วันที่/เวลาไม่ถูกต้อง")
-    .refine((s) => new Date(s).getTime() <= Date.now() + 60_000, "เวลาเกิดต้องไม่อยู่ในอนาคต"),
+    .refine((s) => parsePlantDateTime(s).getTime() <= Date.now() + 60_000, "เวลาเกิดต้องไม่อยู่ในอนาคต"),
   cause: optionalText(500),
 });
 

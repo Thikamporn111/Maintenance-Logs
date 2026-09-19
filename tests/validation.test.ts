@@ -3,6 +3,7 @@ import {
   alarmCreateSchema, alarmUpdateSchema, fieldErrors, machineSchema, maintenanceSchema, pick, planSchema,
 } from "@/lib/validation";
 import { addDays, todayStr } from "@/lib/pm";
+import { parsePlantDateTime, toPlantInput } from "@/lib/time";
 
 const errorsOf = (r: { success: boolean; error?: import("zod").ZodError }) => (r.success ? {} : fieldErrors(r.error!));
 
@@ -30,10 +31,20 @@ describe("machineSchema", () => {
 });
 
 describe("alarm rules", () => {
+  const alarm = { machineId: "M-001", code: "E-201", description: "Spindle overload" };
+
   it("rejects an alarm time in the future", () => {
-    const future = new Date(Date.now() + 3_600_000).toISOString();
-    const r = alarmCreateSchema.safeParse({ machineId: "M-001", code: "E-201", description: "Spindle overload", occurredAt: future });
-    expect(errorsOf(r).occurredAt).toMatch("อนาคต");
+    const future = toPlantInput(new Date(Date.now() + 3_600_000).toISOString());
+    expect(errorsOf(alarmCreateSchema.safeParse({ ...alarm, occurredAt: future })).occurredAt).toMatch("อนาคต");
+  });
+
+  it("accepts the current plant time and rejects non datetime-local input", () => {
+    expect(alarmCreateSchema.safeParse({ ...alarm, occurredAt: toPlantInput() }).success).toBe(true);
+    expect(errorsOf(alarmCreateSchema.safeParse({ ...alarm, occurredAt: "yesterday" })).occurredAt).toBeDefined();
+  });
+
+  it("reads datetime-local values as Thailand time (UTC+7)", () => {
+    expect(parsePlantDateTime("2026-09-19T08:00").toISOString()).toBe("2026-09-19T01:00:00.000Z");
   });
 
   it("requires cause and action before closing (REQ-ALM-02)", () => {
