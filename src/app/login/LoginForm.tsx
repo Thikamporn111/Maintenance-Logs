@@ -26,6 +26,7 @@ export function LoginForm({ accounts, demoPassword }: { accounts: Account[]; dem
               key={a.email}
               type="button"
               onClick={() => setEmail(a.email)}
+              aria-label={`ใช้บัญชี ${a.name} (${a.role})`}
               aria-pressed={email === a.email}
               className={`flex items-center gap-3 rounded-[10px] border bg-surface px-3 py-2.5 text-left ${email === a.email ? "border-accent ring-1 ring-accent" : "border-line hover:border-line-strong"}`}
             >
