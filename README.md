@@ -6,6 +6,40 @@ Web Application สำหรับงาน Automation และงานซ่�
 > **สถานะ:** branch `frontend-dev` คือ Frontend ช่วงพัฒนา ก่อนทดสอบเป็น production
 > ตอนนี้ใช้ **ข้อมูลจำลอง (mock data)** และ **login ทดลอง** ทีมจะต่อ Supabase ในขั้นถัดไป ดู [docs/supabase-handoff.md](docs/supabase-handoff.md)
 
+## Frontend นี้คืออะไร และต่างจาก Prototype อย่างไร
+
+branch นี้คือ **Frontend จริง** ที่สร้างด้วย Next.js + Tailwind CSS ตามที่โจทย์กำหนด โดยยึดหน้าจอและ flow จาก UX/UI prototype
+Next.js เป็น framework แบบ full-stack โปรเจกต์นี้จึงมีทั้งส่วนหน้าเว็บ และส่วนที่ทำงานฝั่ง server (ตรวจสิทธิ์และ validate) อยู่ในโปรเจกต์เดียว ตามแนวทางในบทที่ 3 ของรายวิชา
+
+### เทียบกับ Prototype
+
+| | Prototype (branch `prototype-ux-ui`) | Frontend (branch `frontend-dev`) |
+|---|---|---|
+| จุดประสงค์ | ออกแบบและทดลอง UX/UI | ระบบที่นำไปต่อฐานข้อมูลและ deploy จริง |
+| เทคโนโลยี | HTML / CSS / JavaScript ธรรมดา | **Next.js 16 + Tailwind CSS 4 + TypeScript** ตามโจทย์ |
+| การแสดงผล | สร้างหน้าในเบราว์เซอร์ทั้งหมด | server render ทุกหน้า มี JavaScript ฝั่งเบราว์เซอร์เฉพาะส่วนที่ต้องโต้ตอบ |
+| ข้อมูล | เก็บใน localStorage ของเบราว์เซอร์แต่ละเครื่อง | อยู่ที่ server ผ่าน `repo.ts` (ตอนนี้เป็นข้อมูลจำลอง รอต่อ Supabase) |
+| Login | กดเลือกบัญชีเข้าได้เลย | ตรวจอีเมล/รหัสผ่าน, session cookie ที่เซ็นกันปลอม, จำกัดการลองรหัสผิด |
+| ตรวจสิทธิ์ | ซ่อนเมนูในเบราว์เซอร์ (แก้ได้ง่าย) | **ตรวจที่ server ทุกหน้าและทุก action** เปิด URL ข้ามสิทธิ์ได้ 403 จริง |
+| Validation | ในเบราว์เซอร์อย่างเดียว | แสดงในฟอร์ม **และตรวจซ้ำที่ server** ด้วยกฎชุดเดียวกัน (zod) |
+| URL | หน้าเดียว เปลี่ยนเนื้อหาด้วย JavaScript | แต่ละหน้ามี URL ของตัวเอง ตัวกรองอยู่ใน URL แชร์ลิงก์ได้ |
+| ความปลอดภัย | ไม่มี | CSP แบบ nonce, security headers, ไม่มี secret ในโค้ด |
+| Test / CI | ไม่มี | unit test 29 กรณี + GitHub Actions ทุกครั้งที่ push |
+| เวลา | เวลาของเครื่องที่เปิด | ใช้เวลาโรงงาน (UTC+7) เสมอ แม้ server อยู่คนละ time zone |
+
+### ส่วนประกอบของ Frontend
+
+| ส่วน | ไฟล์ | หน้าที่ |
+|---|---|---|
+| หน้าเว็บ (Pages) | `src/app/(app)/*/page.tsx`, `src/app/login/` | Dashboard, Machines, Alarms, Maintenance, Maintenance Plan, Users, Audit Log, Login |
+| ฟอร์ม (Client Components) | `*Form.tsx`, `src/components/client.tsx` | กรอกข้อมูล, แสดง error ทันที, ตัวกรองที่อัปเดตตามที่พิมพ์ |
+| Server Actions | `src/app/(app)/*/actions.ts` | รับฟอร์ม → ตรวจสิทธิ์ → validate → บันทึก |
+| Components | `src/components/` | ป้ายสถานะ, ไอคอน, กราฟ SVG, ปุ่มยืนยันการลบ |
+| กฎและสิทธิ์ | `src/lib/validation.ts`, `permissions.ts`, `pm.ts`, `time.ts` | กฎ validation, สิทธิ์ของแต่ละ Role, การคำนวณวันแผน PM, เวลาโรงงาน |
+| Auth | `src/lib/auth/`, `src/proxy.ts` | login, session, ตรวจสิทธิ์, CSP |
+| ชั้นข้อมูล | `src/lib/data/` | ข้อมูลตัวอย่างและฟังก์ชันอ่าน/เขียน (จุดที่ต้องเปลี่ยนเป็น Supabase) |
+| ธีม | `src/app/globals.css` | สีขาว / เทา / แดงเลือดหมู, โหมดมืด |
+
 ## สถานะงาน
 
 ### ✅ สิ่งที่ทำแล้ว
