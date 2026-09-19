@@ -1,6 +1,5 @@
 // Core: state, permissions, helpers, shell, login, dashboard.
 const STORE_KEY = "miq-proto-v2";
-const DEMO_PASSWORD = "REDACTED";
 
 const ROLES = {
   admin: { label: "Admin", pages: ["dashboard", "machines", "alarms", "maintenance", "plan", "users", "audit"], machineWrite: true, alarmCreate: true, alarmUpdate: true, mntWrite: true, planWrite: true, pmIssue: true },
@@ -195,8 +194,8 @@ function loginView() {
         </div>
         <div class="field ${S.loginErr ? "invalid" : ""}">
           <label for="login-pass">รหัสผ่าน</label>
-          <input class="input" id="login-pass" name="password" type="password" autocomplete="current-password" value="${DEMO_PASSWORD}">
-          ${S.loginErr ? `<span class="err">${icon("alert")}${esc(S.loginErr)}</span>` : `<span class="hint">รหัสผ่านบัญชีทดลอง: <span class="mono">${DEMO_PASSWORD}</span></span>`}
+          <input class="input" id="login-pass" name="password" type="password" autocomplete="current-password" value="">
+          ${S.loginErr ? `<span class="err">${icon("alert")}${esc(S.loginErr)}</span>` : `<span class="hint">Prototype: ไม่มีระบบยืนยันตัวตนจริง ใส่รหัสผ่านอะไรก็ได้</span>`}
         </div>
         <button class="btn primary" type="submit">เข้าสู่ระบบ</button>
       </form>
@@ -210,7 +209,7 @@ function doLogin(form) {
   if (!email || !pass) { S.loginErr = "กรอกอีเมลและรหัสผ่านให้ครบ"; return render(); }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { S.loginErr = "รูปแบบอีเมลไม่ถูกต้อง"; return render(); }
   const u = S.db.users.find(x => x.email === email && x.active);
-  if (!u || pass !== DEMO_PASSWORD) { S.loginErr = "อีเมลหรือรหัสผ่านไม่ถูกต้อง"; return render(); }
+  if (!u) { S.loginErr = "อีเมลหรือรหัสผ่านไม่ถูกต้อง"; return render(); }
   S.loginErr = ""; S.session = u.id; S.route = "dashboard"; save(); render();
   toast(`ยินดีต้อนรับ ${u.name}`);
 }
