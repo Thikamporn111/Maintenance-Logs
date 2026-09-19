@@ -88,6 +88,23 @@ Next.js เป็น framework แบบ full-stack โปรเจกต์น�
 
 **เมื่อต่อ Supabase แล้ว:** หน้าเว็บจะอ่านข้อมูลจากฐานข้อมูลแทน `seed.ts` จะไม่ถูกใช้อีก จะลบทิ้ง หรือแปลงเป็น SQL insert เพื่อใส่ข้อมูลเริ่มต้นใน Supabase ก็ได้
 
+## ต่อ Supabase แล้วเอาข้อมูลตัวอย่างออก และทำเป็น Product จริง
+
+สรุปขั้นตอน รายละเอียดทั้งหมดอยู่ใน [docs/production-guide.md](docs/production-guide.md)
+
+**เอาข้อมูลตัวอย่างออก**
+1. แก้ `src/lib/data/repo.ts` ให้ query Supabase แล้วลบ `src/lib/data/seed.ts`
+2. เปลี่ยน login ทดลองเป็น Supabase Auth: ลบ `credentials.ts`, `session.ts` และปุ่มบัญชีทดลองในหน้า Login
+3. ลบ `DEMO_LOGIN`, `DEMO_PASSWORD`, `SESSION_SECRET` แล้วใส่ค่า Supabase แทน
+4. เชิญผู้ใช้จริงผ่าน Supabase Auth, ปิดการสมัครเอง และเพิ่มเครื่องจักรจริงผ่านหน้า Machines
+5. รันคำสั่งค้นหาของเดโมที่เหลืออยู่ แล้วให้ build, lint และ test ผ่าน
+
+**ทำเป็น Product จริง**
+- แยก Supabase และ Vercel เป็นชุดพัฒนา (`frontend-dev`) กับชุดใช้งานจริง (`main`) และห้าม push ตรงเข้า `main`
+- เก็บ schema เป็น migration ใน repo, เพิ่ม index และตั้ง backup
+- เปิด RLS ทุกตาราง, ไม่มี secret ใน client และพิจารณาเปิด MFA ให้ Admin
+- เพิ่ม end-to-end test, ทำ UAT กับช่างจริง และทดลองใช้ 1 ไลน์ผลิตก่อนเปิดใช้ทั้งโรงงาน
+
 ## วัตถุประสงค์
 
 โรงงานบันทึก Alarm และงานซ่อมในหลายแหล่งข้อมูล ทำให้ค้นหาประวัติยาก ติดตามสถานะงานไม่ชัด และผู้เกี่ยวข้องเห็นข้อมูลไม่พร้อมกัน
