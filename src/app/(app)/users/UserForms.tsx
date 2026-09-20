@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import type { Profile, Role, RoleDefinition, Page, Permission } from "@/lib/types";
+import type { Profile, RoleDefinition, Page, Permission } from "@/lib/types";
 import { ROLES } from "@/lib/types";
 import { ALL_PAGES, ALL_PERMISSIONS, ROLE_LABEL } from "@/lib/permissions";
 import { getDictionary, type Locale } from "@/lib/i18n";

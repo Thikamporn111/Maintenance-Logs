@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useEffect } from "react";
 import { login, signInWithGoogle } from "./actions";
 import { FormError } from "@/components/ui";
 import { Icon } from "@/components/icons";
@@ -30,13 +30,11 @@ function GoogleIcon({ className = "size-5" }: { className?: string }) {
 }
 
 export function LoginForm({
-  demoEnabled: _demoEnabled,
   supabaseReady,
   initialError,
   initialMessage,
   locale = "th",
 }: {
-  demoEnabled: boolean;
   supabaseReady: boolean;
   initialError?: string;
   initialMessage?: string;
@@ -46,13 +44,35 @@ export function LoginForm({
   const [email, setEmail] = useState(loginState.values?.email || "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [clearedErrors, setClearedErrors] = useState<{ email?: boolean; password?: boolean }>({});
 
   const generalError = initialError || loginState.message;
   const isEn = locale === "en";
   const isEmailFilled = email.trim().length > 3 && email.includes("@");
 
+  // รีเซ็ตสถานะการเคลียร์ error เมื่อมีการ submit ใหม่แล้วได้ผลลัพธ์กลับมา
+  useEffect(() => {
+    setClearedErrors({});
+  }, [loginState]);
+
+  const hasEmailError = Boolean(loginState.errors?.email && !clearedErrors.email);
+  const hasPasswordError = Boolean(loginState.errors?.password && !clearedErrors.password);
+
+  // ข้อความ Placeholder: ถ้ามี Error ให้แสดงข้อความ Error ในช่องกรอกแทน
+  const emailPlaceholder = hasEmailError
+    ? loginState.errors?.email
+    : isEn
+    ? "Enter your email"
+    : "กรอกอีเมลของคุณ";
+
+  const passwordPlaceholder = hasPasswordError
+    ? loginState.errors?.password
+    : isEn
+    ? "Enter your password"
+    : "กรอกรหัสผ่านของคุณ";
+
   return (
-    <div className="flex w-full max-w-[420px] flex-col">
+    <div className="flex w-full max-w-105 flex-col">
       {/* ── Heading ── */}
       <div className="mb-6">
         <h1
@@ -88,19 +108,34 @@ export function LoginForm({
 
       {/* ── Ghostlamp Stacked Card Inputs (Single Container) ── */}
       <form action={loginAction} noValidate>
-        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700/80 bg-[#F4F6F9] dark:bg-slate-800/80 shadow-2xs">
+        <div
+          className={`overflow-hidden rounded-xl border transition-colors ${
+            hasEmailError || hasPasswordError
+              ? "border-rose-400/80 dark:border-rose-500/60"
+              : "border-slate-200 dark:border-slate-700/80"
+          } bg-[#F4F6F9] dark:bg-slate-800/80 shadow-2xs`}
+        >
           {/* Row 1: Email Address */}
           <div className="relative flex items-center gap-3 px-4 py-3 transition-colors hover:bg-slate-100/50 dark:hover:bg-slate-800">
             {/* Email outline icon */}
-            <div className="flex size-7 shrink-0 items-center justify-center text-slate-400">
+            <div
+              className={`flex size-7 shrink-0 items-center justify-center transition-colors ${
+                hasEmailError ? "text-rose-500" : "text-slate-400"
+              }`}
+            >
               <svg className="size-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="5" width="18" height="14" rx="2" />
                 <polyline points="3 7 12 13 21 7" />
               </svg>
             </div>
 
-            <div className="flex flex-1 flex-col">
-              <label htmlFor="email" className="text-[11px] font-medium text-slate-400 dark:text-slate-400 select-none">
+            <div className="flex flex-1 flex-col min-w-0">
+              <label
+                htmlFor="email"
+                className={`text-[11px] font-medium transition-colors select-none ${
+                  hasEmailError ? "text-rose-500 font-semibold" : "text-slate-400 dark:text-slate-400"
+                }`}
+              >
                 {isEn ? "Email Address" : "Email Address"}
               </label>
               <input
@@ -109,16 +144,23 @@ export function LoginForm({
                 type="email"
                 autoComplete="username"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={isEn ? "Enter your email" : "กรอกอีเมลของคุณ"}
-                aria-invalid={!!loginState.errors?.email}
-                className="w-full bg-transparent text-sm font-medium text-slate-800 dark:text-white placeholder:text-slate-300 outline-none"
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (hasEmailError) setClearedErrors((prev) => ({ ...prev, email: true }));
+                }}
+                placeholder={emailPlaceholder}
+                aria-invalid={hasEmailError}
+                className={`w-full bg-transparent text-sm font-medium text-slate-800 dark:text-white outline-none transition-colors ${
+                  hasEmailError
+                    ? "placeholder:text-rose-500 placeholder:font-normal placeholder:opacity-90"
+                    : "placeholder:text-slate-300"
+                }`}
               />
             </div>
 
             {/* Ghostlamp Green Checkmark Circle on Email */}
             <div className="shrink-0 pl-1">
-              {isEmailFilled ? (
+              {isEmailFilled && !hasEmailError ? (
                 <span
                   className="flex size-5 items-center justify-center rounded-full bg-[#10B981] text-white shadow-xs transition-all"
                   title="Email formatted correctly"
@@ -134,20 +176,29 @@ export function LoginForm({
           </div>
 
           {/* Dividing Border between Email and Password */}
-          <div className="h-[1px] w-full bg-slate-200/80 dark:bg-slate-700/80" />
+          <div className="h-px w-full bg-slate-200/80 dark:bg-slate-700/80" />
 
           {/* Row 2: Password */}
           <div className="relative flex items-center gap-3 px-4 py-3 transition-colors hover:bg-slate-100/50 dark:hover:bg-slate-800">
             {/* Lock outline icon */}
-            <div className="flex size-7 shrink-0 items-center justify-center text-slate-400">
+            <div
+              className={`flex size-7 shrink-0 items-center justify-center transition-colors ${
+                hasPasswordError ? "text-rose-500" : "text-slate-400"
+              }`}
+            >
               <svg className="size-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="5" y="11" width="14" height="10" rx="2" />
                 <path d="M8 11V7a4 4 0 0 1 8 0v4" />
               </svg>
             </div>
 
-            <div className="flex flex-1 flex-col">
-              <label htmlFor="password" className="text-[11px] font-medium text-slate-400 dark:text-slate-400 select-none">
+            <div className="flex flex-1 flex-col min-w-0">
+              <label
+                htmlFor="password"
+                className={`text-[11px] font-medium transition-colors select-none ${
+                  hasPasswordError ? "text-rose-500 font-semibold" : "text-slate-400 dark:text-slate-400"
+                }`}
+              >
                 {isEn ? "Password" : "Password"}
               </label>
               <input
@@ -156,10 +207,17 @@ export function LoginForm({
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={isEn ? "Enter your password" : "กรอกรหัสผ่านของคุณ"}
-                aria-invalid={!!loginState.errors?.password}
-                className="w-full bg-transparent text-sm font-medium tracking-wide text-slate-800 dark:text-white placeholder:text-slate-300 outline-none"
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (hasPasswordError) setClearedErrors((prev) => ({ ...prev, password: true }));
+                }}
+                placeholder={passwordPlaceholder}
+                aria-invalid={hasPasswordError}
+                className={`w-full bg-transparent text-sm font-medium tracking-wide text-slate-800 dark:text-white outline-none transition-colors ${
+                  hasPasswordError
+                    ? "placeholder:text-rose-500 placeholder:font-normal placeholder:opacity-90"
+                    : "placeholder:text-slate-300"
+                }`}
               />
             </div>
 
@@ -174,14 +232,6 @@ export function LoginForm({
             </button>
           </div>
         </div>
-
-        {/* Validation Errors */}
-        {loginState.errors?.email && (
-          <span className="text-xs text-rose-500 mt-1 block px-1">{loginState.errors.email}</span>
-        )}
-        {loginState.errors?.password && (
-          <span className="text-xs text-rose-500 mt-1 block px-1">{loginState.errors.password}</span>
-        )}
 
         {/* ── Primary Submit Button ── */}
         <div className="mt-6">

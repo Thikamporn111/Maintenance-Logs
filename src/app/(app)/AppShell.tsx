@@ -36,16 +36,14 @@ export function AppShell({
   children: ReactNode;
 }) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(initialCollapsed);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    const saved = localStorage.getItem("mtm_sidebar_collapsed");
-    if (saved !== null) {
-      setCollapsed(saved === "true");
+  const [collapsed, setCollapsed] = useState(() => {
+    // SSR-safe: initialCollapsed from cookie on server, then localStorage override on client
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("mtm_sidebar_collapsed");
+      if (saved !== null) return saved === "true";
     }
-  }, []);
+    return initialCollapsed;
+  });
 
   function toggleSidebar() {
     setCollapsed((prev) => {
@@ -113,7 +111,7 @@ export function AppShell({
         >
           <div className="flex items-center gap-3 min-w-0">
             <span
-              className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 font-mono text-sm font-bold text-white shadow-sm ring-1 ring-white/10"
+              className="grid size-9 shrink-0 place-items-center rounded-xl bg-linear-to-br from-blue-600 to-blue-700 font-mono text-sm font-bold text-white shadow-sm ring-1 ring-white/10"
               title="Machine-Maintenance"
             >
               MTM
@@ -150,7 +148,7 @@ export function AppShell({
                 href={it.href}
                 aria-current={active ? "page" : undefined}
                 title={collapsed ? label : undefined}
-                className={`relative flex min-w-[44px] flex-1 flex-col items-center gap-1 rounded-xl text-[11px] font-medium shrink-0 sm:shrink transition-all duration-150 ${
+                className={`relative flex min-w-11 flex-1 flex-col items-center gap-1 rounded-xl text-[11px] font-medium shrink-0 sm:shrink transition-all duration-150 ${
                   collapsed
                     ? "md:min-w-0 md:flex-none md:justify-center md:px-0 md:py-2.5"
                     : "md:min-w-0 md:flex-none md:flex-row md:gap-3 md:px-3 md:py-2.5 md:text-[13.5px]"
@@ -162,14 +160,14 @@ export function AppShell({
               >
                 <Icon
                   name={it.icon}
-                  className={`size-[18px] shrink-0 ${active ? "text-white" : "text-muted"}`}
+                  className={`size-4.5 shrink-0 ${active ? "text-white" : "text-muted"}`}
                 />
 
                 {/* Text Label */}
                 {!collapsed ? (
                   <span className="hidden md:inline truncate">{label}</span>
                 ) : null}
-                <span className="md:hidden truncate max-w-[48px] text-center">
+                <span className="md:hidden truncate max-w-12 text-center">
                   {short}
                 </span>
 
@@ -181,7 +179,7 @@ export function AppShell({
                     } ${
                       collapsed
                         ? "absolute right-1 top-1 size-2 p-0 md:size-2.5"
-                        : "absolute right-0.5 top-0.5 px-1 text-[10px] leading-[15px] md:static md:ml-auto md:px-2 md:text-[11px] md:leading-[18px]"
+                        : "absolute right-0.5 top-0.5 px-1 text-[10px] leading-3.75 md:static md:ml-auto md:px-2 md:text-[11px] md:leading-4.5"
                     }`}
                   >
                     {collapsed ? "" : it.badge}
@@ -255,7 +253,7 @@ export function AppShell({
             <div className="flex items-center gap-2 min-w-0 sm:hidden">
               <span className="font-mono text-xs font-bold text-accent">MTM</span>
               <span className="text-muted">·</span>
-              <span className="text-xs text-muted truncate max-w-[140px]">
+              <span className="text-xs text-muted truncate max-w-35">
                 {user.name}
               </span>
             </div>
@@ -299,7 +297,7 @@ export function AppShell({
                 aria-label={t.common.themeToggle}
                 title={t.common.themeToggle}
               >
-                <Icon name={theme === "dark" ? "sun" : "moon"} className="size-[17px]" />
+                <Icon name={theme === "dark" ? "sun" : "moon"} className="size-4.25" />
               </button>
             </form>
 

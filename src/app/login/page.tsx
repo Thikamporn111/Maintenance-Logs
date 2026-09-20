@@ -18,12 +18,12 @@ export async function generateMetadata(): Promise<Metadata> {
 
 function GhostlampSceneIllustration() {
   return (
-    <div className="relative flex w-full max-w-[560px] items-center justify-center select-none">
+    <div className="relative flex w-full max-w-140 items-center justify-center select-none">
       <svg
         viewBox="0 0 640 520"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-auto max-h-[480px] drop-shadow-sm"
+        className="w-full h-auto max-h-120 drop-shadow-sm"
       >
         {/* Soft Background Clouds / Blobs */}
         <path
@@ -357,7 +357,6 @@ export default async function LoginPage({
           {/* Right Column: "Welcome Back :)" Form */}
           <div className="flex items-center justify-center lg:justify-start lg:pl-6">
             <LoginForm
-              demoEnabled={demo}
               supabaseReady={supabaseReady}
               initialError={sp.error}
               initialMessage={sp.message}
