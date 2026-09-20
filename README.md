@@ -12,6 +12,8 @@ A full-stack web application for managing factory machine maintenance operations
 ![Vitest](https://img.shields.io/badge/Tests-Vitest-6e9f18?logo=vitest)
 ![Deploy](https://img.shields.io/badge/Deploy-Vercel-000?logo=vercel)
 
+**🌐 Live:** https://maintenance-logs-ten.vercel.app
+
 ---
 
 ## 📋 Table of Contents
@@ -269,7 +271,8 @@ Maintenance-Logs/
 ├── docs/
 │   ├── architecture.md        # Architecture documentation
 │   ├── production-guide.md    # Production deployment guide
-│   └── supabase-handoff.md    # Supabase setup guide
+│   ├── supabase-handoff.md    # Supabase setup guide
+│   └── test-checklist.md      # Tester checklist before hand-in
 ├── tests/
 │   ├── *.test.ts              # 12 test suites
 │   └── stubs/
@@ -436,13 +439,24 @@ Cookie-based theme system with **Light** and **Dark** modes:
 
 ## 🚀 Deployment
 
+### Live Deployment
+
+| | |
+|---|---|
+| **Production URL** | https://maintenance-logs-ten.vercel.app |
+| **Production branch** | `main` — every push deploys automatically |
+| **Preview** | every other branch / pull request gets its own preview URL |
+
 ### Vercel (Recommended)
 
-1. **Connect repository** to Vercel
-2. **Set environment variables** in Vercel Dashboard:
+1. **Connect repository** to Vercel (Framework preset: Next.js, Root directory: `./`)
+2. **Set environment variables** in Vercel Dashboard (Production + Preview):
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SESSION_SECRET` (generate a random 32+ char string)
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` (server-side only, bypasses RLS)
+   - `SESSION_SECRET` (random 32+ char string)
+   - `DEMO_LOGIN=off` (disables the demo accounts in production)
 3. **Deploy** — Vercel auto-detects Next.js
 
 ```bash
@@ -452,12 +466,19 @@ npx vercel --prod
 
 ### Supabase Configuration for Production
 
-1. Add your production domain to **Supabase Auth** → **URL Configuration** → **Site URL**
-2. Add redirect URLs for OAuth:
-   - `https://your-domain.com/auth/callback`
-   - `https://your-domain.com/api/auth/callback/google`
+1. **Supabase** → Authentication → URL Configuration → **Site URL**
+   - `https://maintenance-logs-ten.vercel.app`
+2. Same page → **Redirect URLs**:
+   - `https://maintenance-logs-ten.vercel.app/auth/callback`
+   - `https://maintenance-logs-ten.vercel.app/api/auth/callback/google`
+   - `http://localhost:3000/**` (local development)
+3. **Google Cloud Console** → Credentials → OAuth client → Authorized redirect URIs:
+   - `https://<your-project-ref>.supabase.co/auth/v1/callback`
+
+> Leaving Site URL as `http://localhost:3000` makes Google sign-in bounce back to localhost after login.
 
 > For detailed production setup, see [`docs/production-guide.md`](docs/production-guide.md).
+> Before hand-in, run through [`docs/test-checklist.md`](docs/test-checklist.md).
 
 ---
 
