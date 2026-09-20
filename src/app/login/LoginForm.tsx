@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useEffect } from "react";
+import { useActionState, useState } from "react";
 import { login, signInWithGoogle } from "./actions";
 import { FormError } from "@/components/ui";
 import { Icon } from "@/components/icons";
@@ -44,16 +44,19 @@ export function LoginForm({
   const [email, setEmail] = useState(loginState.values?.email || "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [clearedErrors, setClearedErrors] = useState<{ email?: boolean; password?: boolean }>({});
+  // เก็บคู่กับผลลัพธ์ที่มันอ้างถึง ถ้า submit ใหม่แล้วได้ผลลัพธ์คนละก้อน ค่านี้จะถือว่าหมดอายุเอง
+  const [cleared, setCleared] = useState<{
+    source: typeof loginState;
+    email?: boolean;
+    password?: boolean;
+  }>({ source: loginState });
 
   const generalError = initialError || loginState.message;
   const isEn = locale === "en";
   const isEmailFilled = email.trim().length > 3 && email.includes("@");
 
-  // รีเซ็ตสถานะการเคลียร์ error เมื่อมีการ submit ใหม่แล้วได้ผลลัพธ์กลับมา
-  useEffect(() => {
-    setClearedErrors({});
-  }, [loginState]);
+  // รีเซ็ตเองเมื่อมีผลลัพธ์ใหม่จากการ submit โดยไม่ต้องใช้ useEffect
+  const clearedErrors = cleared.source === loginState ? cleared : { source: loginState };
 
   const hasEmailError = Boolean(loginState.errors?.email && !clearedErrors.email);
   const hasPasswordError = Boolean(loginState.errors?.password && !clearedErrors.password);
@@ -146,7 +149,7 @@ export function LoginForm({
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
-                  if (hasEmailError) setClearedErrors((prev) => ({ ...prev, email: true }));
+                  if (hasEmailError) setCleared({ ...clearedErrors, email: true });
                 }}
                 placeholder={emailPlaceholder}
                 aria-invalid={hasEmailError}
@@ -209,7 +212,7 @@ export function LoginForm({
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
-                  if (hasPasswordError) setClearedErrors((prev) => ({ ...prev, password: true }));
+                  if (hasPasswordError) setCleared({ ...clearedErrors, password: true });
                 }}
                 placeholder={passwordPlaceholder}
                 aria-invalid={hasPasswordError}
