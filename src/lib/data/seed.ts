@@ -1,9 +1,10 @@
-// Example data for development. Dates are relative to "now" so the dashboard always has a recent week.
-import type { Alarm, AuditEntry, Machine, MaintenanceRecord, PmPlan, Profile } from "../types";
+import type { Alarm, AuditEntry, Machine, MaintenanceRecord, PmPlan, Profile, RoleDefinition } from "../types";
+import { DEFAULT_ROLE_DEFINITIONS } from "../permissions";
 import { addDays, todayStr } from "../pm";
 
 export interface Seed {
   users: Profile[];
+  roles: RoleDefinition[];
   machines: Machine[];
   alarms: Alarm[];
   maintenance: MaintenanceRecord[];
@@ -21,10 +22,10 @@ const day = (offset: number) => addDays(todayStr(), -offset);
 
 export function createSeed(): Seed {
   const users: Profile[] = [
-    { id: "u1", name: "สุภาพร ใจดี", email: "admin@plant.local", role: "admin", active: true },
-    { id: "u2", name: "ธนากร ศรีสุข", email: "tech1@plant.local", role: "technician", active: true },
-    { id: "u3", name: "วรเชษฐ์ บุญมา", email: "tech2@plant.local", role: "technician", active: true },
-    { id: "u4", name: "ณัฐชา แก้วใส", email: "manager@plant.local", role: "viewer", active: true },
+    { id: "u1", name: "สุภาพร ใจดี", email: "admin@plant.local", role: "admin", active: true, provider: "local" },
+    { id: "u2", name: "ธนากร ศรีสุข", email: "tech1@plant.local", role: "technician", active: true, provider: "local" },
+    { id: "u3", name: "วรเชษฐ์ บุญมา", email: "tech2@plant.local", role: "technician", active: true, provider: "local" },
+    { id: "u4", name: "ณัฐชา แก้วใส", email: "manager@plant.local", role: "viewer", active: true, provider: "google" },
   ];
 
   const machines: Machine[] = [
@@ -91,5 +92,11 @@ export function createSeed(): Seed {
     { at: ago(1, 11, 25), userId: "u2", text: "ปิด ALM-1021" },
   ];
 
-  return { users, machines, alarms, maintenance, plans, audit };
+  const roles: RoleDefinition[] = DEFAULT_ROLE_DEFINITIONS.map((r) => ({
+    ...r,
+    pages: [...r.pages],
+    permissions: [...r.permissions],
+  }));
+
+  return { users, roles, machines, alarms, maintenance, plans, audit };
 }

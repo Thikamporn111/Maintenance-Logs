@@ -34,7 +34,11 @@ export async function deactivatePlanAction(formData: FormData): Promise<void> {
   const actor = await requirePermission("plan:write");
   const id = String(formData.get("id") ?? "");
   if (!PLAN_ID_RE.test(id)) notFound();
-  await deactivatePlan(actor, id);
+  const res = await deactivatePlan(actor, id);
+  if (!res.ok) {
+    const msg = encodeURIComponent(res.errors?.form || "cannot_deactivate");
+    redirect(`/plan/${id}?error=${msg}`);
+  }
   revalidatePath("/", "layout");
   redirect(`/plan?notice=deactivated&id=${id}`);
 }

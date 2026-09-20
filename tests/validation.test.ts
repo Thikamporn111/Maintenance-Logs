@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
-  alarmCreateSchema, alarmUpdateSchema, fieldErrors, machineSchema, maintenanceSchema, pick, planSchema,
+  alarmCreateSchema,
+  alarmUpdateSchema,
+  fieldErrors,
+  machineSchema,
+  maintenanceSchema,
+  pick,
+  planSchema,
+  roleCreateSchema,
+  signupSchema,
+  userCreateSchema,
 } from "@/lib/validation";
 import { addDays, todayStr } from "@/lib/pm";
 import { parsePlantDateTime, toPlantInput } from "@/lib/time";
@@ -98,3 +107,62 @@ describe("pick", () => {
     expect(pick("<script>", ["Open", "Closed"])).toBe("");
   });
 });
+
+describe("signupSchema", () => {
+  it("validates name, email and password", () => {
+    const valid = { name: "Somchai S", email: "somchai@plant.local", password: "password123" };
+    expect(signupSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it("rejects short passwords and invalid emails", () => {
+    const invalid = { name: "S", email: "not-an-email", password: "123" };
+    const e = errorsOf(signupSchema.safeParse(invalid));
+    expect(e.name).toBeDefined();
+    expect(e.email).toBeDefined();
+    expect(e.password).toMatch("6 ตัวอักษร");
+  });
+});
+
+describe("userCreateSchema", () => {
+  it("accepts a valid user payload", () => {
+    const valid = { name: "Prasert K", email: "prasert@plant.local", role: "technician", password: "password123" };
+    expect(userCreateSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it("rejects invalid role characters or invalid emails", () => {
+    const invalid = { name: "Prasert K", email: "bad-email", role: "TECH!", password: "123" };
+    const e = errorsOf(userCreateSchema.safeParse(invalid));
+    expect(e.email).toBeDefined();
+    expect(e.role).toBeDefined();
+    expect(e.password).toBeDefined();
+  });
+});
+
+describe("roleCreateSchema", () => {
+  it("accepts a valid role payload with supported pages and permissions", () => {
+    const valid = {
+      id: "operator",
+      label: "Line Operator",
+      description: "Operates production line",
+      pages: ["dashboard", "machines", "alarms"],
+      permissions: ["alarm:create"],
+    };
+    expect(roleCreateSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it("rejects invalid page names, invalid permissions, or malformed role id", () => {
+    const invalid = {
+      id: "Operator #1",
+      label: "O",
+      pages: ["nonexistent_page"],
+      permissions: ["hacker:permission"],
+    };
+    const e = errorsOf(roleCreateSchema.safeParse(invalid));
+    expect(e.id).toBeDefined();
+    expect(e.label).toBeDefined();
+    expect(e.pages).toBeDefined();
+    expect(e.permissions).toBeDefined();
+  });
+});
+
+

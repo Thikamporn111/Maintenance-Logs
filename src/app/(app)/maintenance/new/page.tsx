@@ -1,17 +1,23 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { requirePermission } from "@/lib/auth/dal";
 import { getAlarm, getPlan } from "@/lib/data/repo";
 import { toPlantInput } from "@/lib/time";
 import { ALARM_ID_RE, PLAN_ID_RE } from "@/lib/validation";
 import { PageHeader } from "@/components/ui";
+import { getDictionary, type Locale } from "@/lib/i18n";
 import { MaintenanceForm } from "../MaintenanceForm";
 import { createMaintenanceAction } from "../actions";
 import { maintenanceOptions } from "../options";
 
-export const metadata: Metadata = { title: "สร้างงานซ่อม" };
+export const metadata: Metadata = { title: "Create Maintenance" };
 
 export default async function NewMaintenancePage({ searchParams }: PageProps<"/maintenance/new">) {
   const user = await requirePermission("maintenance:write");
+  const cookieStore = await cookies();
+  const locale = (cookieStore.get("locale")?.value || "th") as Locale;
+  const t = getDictionary(locale);
+
   const sp = await searchParams;
   const initial: Record<string, string> = {
     machineId: "", technicianId: user.role === "technician" ? user.id : "", type: "Corrective", date: toPlantInput(),
@@ -33,8 +39,14 @@ export default async function NewMaintenancePage({ searchParams }: PageProps<"/m
 
   return (
     <>
-      <PageHeader title={plan ? `ออกใบงาน PM (${plan.id})` : "สร้างงานซ่อม"} />
-      <MaintenanceForm action={createMaintenanceAction} initial={initial} {...opts} submitLabel={plan ? "ออกใบงาน" : "สร้างงานซ่อม"} />
+      <PageHeader title={plan ? t.maintenance.createPmTitle.replace("{id}", plan.id) : t.maintenance.createTitle} />
+      <MaintenanceForm
+        action={createMaintenanceAction}
+        initial={initial}
+        {...opts}
+        submitLabel={plan ? t.maintenance.submitIssue : t.maintenance.submitCreate}
+        locale={locale}
+      />
     </>
   );
 }

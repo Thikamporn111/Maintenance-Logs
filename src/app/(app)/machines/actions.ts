@@ -36,7 +36,10 @@ export async function deleteMachineAction(formData: FormData): Promise<void> {
   const id = String(formData.get("id") ?? "");
   if (!MACHINE_ID_RE.test(id)) notFound();
   const res = await deleteMachine(actor, id);
-  if (!res.ok) redirect(`/machines/${id}`); // references exist; the page explains why
+  if (!res.ok) {
+    const msg = encodeURIComponent(res.errors?.form || "cannot_delete");
+    redirect(`/machines/${id}?error=${msg}`);
+  }
   revalidatePath("/", "layout");
   redirect(`/machines?notice=deleted&id=${id}`);
 }

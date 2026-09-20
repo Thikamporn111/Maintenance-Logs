@@ -1,82 +1,222 @@
-// Server-rendered SVG charts. Colors come from theme tokens so they work in light and dark.
 import { fmtDate } from "@/lib/time";
 import type { MachineStatus } from "@/lib/types";
+import type { Locale } from "@/lib/i18n";
 
-export function AlarmChart({ data }: { data: { date: string; count: number }[] }) {
-  const W = 560, H = 210, L = 30, R = 8, T = 18, B = 34;
+export function AlarmChart({
+  data,
+  locale = "th",
+}: {
+  data: { date: string; count: number }[];
+  locale?: Locale;
+}) {
+  const W = 640,
+    H = 220,
+    L = 36,
+    R = 16,
+    T = 24,
+    B = 38;
   const max = Math.max(4, Math.ceil(Math.max(...data.map((d) => d.count)) / 2) * 2);
-  const cw = (W - L - R) / data.length;
-  const bw = Math.min(40, cw * 0.55);
+  const cw = (W - L - R) / (data.length || 1);
+  const bw = Math.min(46, cw * 0.58);
   const y = (v: number) => T + (H - T - B) * (1 - v / max);
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img" aria-label="กราฟจำนวน Alarm รายวัน 7 วันล่าสุด">
-      {[0, max / 2, max].map((t) => (
-        <g key={t}>
-          <line x1={L} x2={W - R} y1={y(t)} y2={y(t)} stroke="var(--line)" strokeDasharray={t ? "3 4" : undefined} />
-          <text x={L - 8} y={y(t) + 4} textAnchor="end" fontSize="11" fill="var(--muted)" fontFamily="var(--font-mono)">{t}</text>
-        </g>
-      ))}
-      {data.map((d, i) => {
-        const x = L + cw * i + (cw - bw) / 2;
-        const last = i === data.length - 1;
-        return (
-          <g key={d.date}>
-            <rect x={x} y={y(d.count)} width={bw} height={Math.max(0, y(0) - y(d.count))} rx={4} fill={last ? "var(--alarm)" : "color-mix(in srgb, var(--alarm) 38%, var(--surface))"} />
-            {d.count > 0 && <text x={x + bw / 2} y={y(d.count) - 6} textAnchor="middle" fontSize="12" fontWeight="600" fill="var(--ink)" fontFamily="var(--font-mono)">{d.count}</text>}
-            <text x={x + bw / 2} y={H - 12} textAnchor="middle" fontSize="11.5" fill={last ? "var(--ink)" : "var(--muted)"} fontWeight={last ? 600 : 400}>
-              {last ? "วันนี้" : fmtDate(d.date, { weekday: "short", day: "numeric" })}
+    <div className="w-full overflow-hidden">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="block h-auto w-full min-h-[170px]"
+        role="img"
+        aria-label={locale === "en" ? "Alarm count for last 7 days" : "กราฟจำนวน Alarm รายวัน 7 วันล่าสุด"}
+      >
+        <defs>
+          <linearGradient id="barGradientToday" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--alarm)" stopOpacity="1" />
+            <stop offset="100%" stopColor="var(--alarm)" stopOpacity="0.75" />
+          </linearGradient>
+          <linearGradient id="barGradientPast" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.45" />
+          </linearGradient>
+        </defs>
+
+        {[0, max / 2, max].map((t) => (
+          <g key={t}>
+            <line
+              x1={L}
+              x2={W - R}
+              y1={y(t)}
+              y2={y(t)}
+              stroke="var(--line)"
+              strokeDasharray={t ? "4 4" : undefined}
+              strokeWidth="1"
+            />
+            <text
+              x={L - 10}
+              y={y(t) + 4}
+              textAnchor="end"
+              fontSize="11"
+              fill="var(--muted)"
+              fontFamily="var(--font-mono)"
+            >
+              {t}
             </text>
           </g>
-        );
-      })}
-    </svg>
+        ))}
+        {data.map((d, i) => {
+          const x = L + cw * i + (cw - bw) / 2;
+          const last = i === data.length - 1;
+          const barHeight = Math.max(0, y(0) - y(d.count));
+          return (
+            <g key={d.date} className="transition-opacity hover:opacity-85">
+              <rect
+                x={x}
+                y={y(d.count)}
+                width={bw}
+                height={barHeight}
+                rx={7}
+                fill={last ? "url(#barGradientToday)" : "url(#barGradientPast)"}
+              />
+              {d.count > 0 && (
+                <text
+                  x={x + bw / 2}
+                  y={y(d.count) - 7}
+                  textAnchor="middle"
+                  fontSize="12"
+                  fontWeight="700"
+                  fill="var(--ink)"
+                  fontFamily="var(--font-mono)"
+                >
+                  {d.count}
+                </text>
+              )}
+              <text
+                x={x + bw / 2}
+                y={H - 12}
+                textAnchor="middle"
+                fontSize="11.5"
+                fill={last ? "var(--ink)" : "var(--muted)"}
+                fontWeight={last ? 600 : 400}
+              >
+                {last
+                  ? locale === "en"
+                    ? "Today"
+                    : "วันนี้"
+                  : fmtDate(d.date, { weekday: "short", day: "numeric" }, locale)}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
   );
 }
 
-const STATUS_COLOR: Record<MachineStatus, string> = { Running: "var(--ok)", Stop: "var(--stop)", Alarm: "var(--alarm)", Maintenance: "var(--mnt)" };
+const STATUS_COLOR: Record<MachineStatus, string> = {
+  Running: "var(--ok)",
+  Stop: "var(--stop)",
+  Alarm: "var(--alarm)",
+  Maintenance: "var(--mnt)",
+};
 
-export function StatusBar({ counts }: { counts: Record<MachineStatus, number> }) {
-  const entries = (Object.keys(STATUS_COLOR) as MachineStatus[]).map((s) => [s, counts[s] ?? 0] as const);
+export function StatusBar({
+  counts,
+  locale = "th",
+}: {
+  counts: Record<MachineStatus, number>;
+  locale?: Locale;
+}) {
+  const entries = (Object.keys(STATUS_COLOR) as MachineStatus[]).map(
+    (s) => [s, counts[s] ?? 0] as const
+  );
   const total = entries.reduce((sum, [, n]) => sum + n, 0) || 1;
   let x = 0;
+
   return (
-    <div>
-      <svg viewBox="0 0 100 4" preserveAspectRatio="none" className="block h-3 w-full overflow-hidden rounded-full" role="img" aria-label="สัดส่วนสถานะเครื่องจักร">
-        <rect width="100" height="4" fill="var(--surface-2)" />
+    <div className="flex flex-col gap-3 w-full">
+      <svg
+        viewBox="0 0 100 6"
+        preserveAspectRatio="none"
+        className="block h-3.5 w-full overflow-hidden rounded-full shadow-inner bg-surface-2"
+        role="img"
+        aria-label={locale === "en" ? "Machine status proportion" : "สัดส่วนสถานะเครื่องจักร"}
+      >
         {entries.map(([s, n]) => {
           const w = (n / total) * 100;
-          const r = <rect key={s} x={x} width={Math.max(0, w - 0.4)} height="4" fill={STATUS_COLOR[s]} />;
+          const rect = (
+            <rect
+              key={s}
+              x={x}
+              y={0}
+              width={w}
+              height={6}
+              fill={STATUS_COLOR[s]}
+            />
+          );
           x += w;
-          return n ? r : null;
+          return rect;
         })}
       </svg>
-      <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] text-muted">
+
+      {/* Legend with Status Dots and Counts */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
         {entries.map(([s, n]) => (
-          <span key={s} className="inline-flex items-center gap-1.5">
-            <svg className="size-2.5" viewBox="0 0 10 10" aria-hidden="true"><rect width="10" height="10" rx="2" fill={STATUS_COLOR[s]} /></svg>
-            {s} <b className="num text-ink">{n}</b>
-          </span>
+          <div key={s} className="flex items-center gap-1.5 font-medium">
+            <span
+              className="size-2.5 rounded-full ring-2 ring-surface shadow-2xs"
+              style={{ background: STATUS_COLOR[s] }}
+            />
+            <span className="text-muted">{s}</span>
+            <b className="num text-ink font-bold">{n}</b>
+          </div>
         ))}
       </div>
     </div>
   );
 }
 
-export function TopMachines({ rows }: { rows: { id: string; type: string; count: number }[] }) {
-  if (!rows.length) return <p className="py-6 text-center text-muted">ไม่มี Alarm ในช่วงนี้</p>;
-  const max = rows[0].count;
+export function TopMachines({
+  rows,
+  locale = "th",
+}: {
+  rows: { id: string; type: string; count: number }[];
+  locale?: Locale;
+}) {
+  if (!rows.length) {
+    return (
+      <div className="text-xs text-muted py-6 text-center">
+        {locale === "en" ? "No alarm data in last 7 days" : "ไม่มีข้อมูล Alarm 7 วันล่าสุด"}
+      </div>
+    );
+  }
+  const max = Math.max(1, ...rows.map((r) => r.count));
+
   return (
-    <div className="flex flex-col gap-2.5">
-      {rows.map((r) => (
-        <div key={r.id} className="grid grid-cols-[110px_minmax(0,1fr)_28px] items-center gap-2.5 text-[13px]">
-          <span className="truncate"><span className="font-mono">{r.id}</span> {r.type}</span>
-          <svg viewBox="0 0 100 10" preserveAspectRatio="none" className="h-2.5 w-full" aria-hidden="true">
-            <rect width="100" height="10" rx="5" fill="var(--surface-2)" />
-            <rect width={(r.count / max) * 100} height="10" rx="5" fill="var(--alarm)" />
-          </svg>
-          <b className="num text-right">{r.count}</b>
-        </div>
-      ))}
+    <div className="flex flex-col gap-3">
+      {rows.map((r, i) => {
+        const pct = Math.round((r.count / max) * 100);
+        return (
+          <div key={r.id} className="flex flex-col gap-1.5 text-xs">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 truncate">
+                <span className="grid size-5 place-items-center rounded-md bg-surface-2 font-mono text-[10px] font-bold text-muted">
+                  {i + 1}
+                </span>
+                <span className="font-mono font-bold text-accent">{r.id}</span>
+                <span className="truncate text-muted">{r.type}</span>
+              </div>
+              <span className="num font-bold text-ink shrink-0 ml-2">
+                {r.count} {locale === "en" ? "times" : "ครั้ง"}
+              </span>
+            </div>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-accent to-rose-500 transition-all duration-300"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
