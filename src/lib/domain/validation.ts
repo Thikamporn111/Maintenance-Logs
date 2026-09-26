@@ -44,7 +44,16 @@ export const userCreateSchema = z.object({
   name: text(2, 60, "กรอกชื่อ-นามสกุล", "ชื่อต้องยาว 2–60 ตัวอักษร"),
   email: z.string().trim().toLowerCase().min(1, "กรอกอีเมล").max(200).email("รูปแบบอีเมลไม่ถูกต้อง"),
   role: z.string().trim().min(2, "เลือก Role ที่ถูกต้อง").max(30).regex(/^[a-z0-9_-]+$/, "รูปแบบ Role ไม่ถูกต้อง"),
-  password: z.string().trim().optional().refine((p) => !p || p.length >= 6, "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"),
+  provider: z.enum(["local", "google"]).default("local"),
+  password: z.string().trim().optional(),
+}).superRefine((data, ctx) => {
+  if (data.provider === "local" && (!data.password || data.password.length < 6)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร",
+      path: ["password"],
+    });
+  }
 });
 
 export const userUpdateSchema = z.object({
