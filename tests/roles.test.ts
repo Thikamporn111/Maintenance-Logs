@@ -234,7 +234,7 @@ describe("Roles & Dynamic RBAC Management", () => {
     }
 
     // Try to set invalid/non-existent role
-    const invalidRoleRes = await setUserRole(admin2, "u2", "ghost_role" as unknown as Role);
+    const invalidRoleRes = await setUserRole(admin2, "u2", "ghost_role");
     expect(invalidRoleRes.ok).toBe(false);
     if (!invalidRoleRes.ok) {
       expect(invalidRoleRes.errors.form).toContain("ไม่พบ Role");

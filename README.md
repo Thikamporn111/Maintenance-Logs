@@ -128,7 +128,7 @@ git clone https://github.com/Thikamporn111/Maintenance-Logs.git
 cd Maintenance-Logs
 
 # 2. Switch to the development branch
-git checkout frontend-dev
+git checkout main
 
 # 3. Install dependencies
 npm install
