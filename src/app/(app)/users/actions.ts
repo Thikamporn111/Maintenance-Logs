@@ -54,7 +54,7 @@ export async function toggleActiveAction(formData: FormData): Promise<void> {
 
 export async function createUserAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const actor = await requirePermission("users:manage");
-  const values = formValues(formData, ["name", "email", "role", "password"]);
+  const values = formValues(formData, ["name", "email", "role", "password", "provider"]);
   const parsed = userCreateSchema.safeParse(values);
   if (!parsed.success) {
     return { errors: fieldErrors(parsed.error), values, message: "กรุณาตรวจสอบข้อมูลที่ไม่ถูกต้อง" };

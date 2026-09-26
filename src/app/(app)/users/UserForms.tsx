@@ -25,11 +25,13 @@ export function UserCreateForm({
 }) {
   const t = getDictionary(locale);
   const [state, formAction] = useActionState(createUserAction, {
-    values: { name: "", email: "", role: "technician", password: "" },
+    values: { name: "", email: "", role: "technician", password: "", provider: "local" },
   });
 
   const v = state.values ?? {};
   const e = state.errors ?? {};
+  
+  const [provider, setProvider] = useState<string>(v.provider || "local");
 
   const roleOptions: readonly [string, string][] =
     roles.length > 0
@@ -49,7 +51,7 @@ export function UserCreateForm({
       <form action={formAction} className="mt-4 flex flex-col gap-4" noValidate>
         <FormError message={state.message} />
 
-        <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4 items-start">
+        <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-5 items-start">
           <Field label={t.common.name} name="name" error={e.name} required>
             <input
               className="input"
@@ -82,16 +84,39 @@ export function UserCreateForm({
             </select>
           </Field>
 
-          <Field label={t.users.passwordInit} name="password" error={e.password} hint={t.users.passwordHintMin}>
-            <input
-              className="input"
-              id="password"
-              name="password"
-              type="password"
-              defaultValue={v.password}
-              placeholder="••••••••"
-            />
+          <Field label="Login Method" name="provider" error={e.provider} required>
+            <select 
+              className="input" 
+              id="provider" 
+              name="provider" 
+              value={provider}
+              onChange={(e) => setProvider(e.target.value)}
+            >
+              <option value="local">Email & Password</option>
+              <option value="google">Google OAuth</option>
+            </select>
           </Field>
+
+          {provider === "google" ? (
+            <div className="rounded-lg border border-line bg-surface-2 p-3 flex items-start gap-2.5 text-xs text-muted">
+              <Icon name="lock" className="size-4 shrink-0 mt-0.5 text-muted" />
+              <div>
+                <b className="block text-ink font-medium">Google OAuth</b>
+                <span>ไม่ต้องตั้งรหัสผ่าน</span>
+              </div>
+            </div>
+          ) : (
+            <Field label={t.users.passwordInit} name="password" error={e.password} hint={t.users.passwordHintMin}>
+              <input
+                className="input"
+                id="password"
+                name="password"
+                type="password"
+                defaultValue={v.password}
+                placeholder="••••••••"
+              />
+            </Field>
+          )}
         </div>
 
         <div className="flex justify-end pt-1">
@@ -1001,7 +1026,6 @@ export function RoleManagementPanel({
             {roles.map((r) => {
               const count = userCountByRole.get(r.id) ?? 0;
               const isSystemRole = Boolean(r.isSystem || r.id === "admin" || r.id === "technician" || r.id === "viewer");
-              const canDelete = !isSystemRole && count === 0;
 
               return (
                 <tr key={r.id}>

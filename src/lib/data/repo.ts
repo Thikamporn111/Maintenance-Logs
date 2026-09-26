@@ -349,7 +349,7 @@ export async function setUserActive(actor: Profile, id: string, active: boolean)
 
 export async function createUser(
   actor: Profile,
-  data: { name: string; email: string; role: Role; password?: string }
+  data: { name: string; email: string; role: Role; provider?: "local" | "google"; password?: string }
 ): Promise<Result> {
   const email = data.email.trim().toLowerCase();
   const existing = await findUserByEmail(email);
@@ -362,6 +362,8 @@ export async function createUser(
     return fail({ role: "ไม่พบ Role นี้ในระบบ" });
   }
 
+  const isGoogle = data.provider === "google";
+
   if (isSupabaseConfigured()) {
     try {
       const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -372,11 +374,15 @@ export async function createUser(
           auth: { autoRefreshToken: false, persistSession: false },
         });
 
+        const passwordToUse = isGoogle ? crypto.randomUUID() + "Gg!" : (data.password || "Plant123456!");
+        const userMetadata: Record<string, string> = { full_name: data.name, role: data.role };
+        if (isGoogle) userMetadata.provider_id = "google";
+
         const { data: newUser, error: authError } = await adminSupabase.auth.admin.createUser({
           email,
-          password: data.password || "Plant123456!",
+          password: passwordToUse,
           email_confirm: true,
-          user_metadata: { full_name: data.name, role: data.role },
+          user_metadata: userMetadata,
         });
 
         if (authError) return fail({ email: authError.message });
@@ -422,6 +428,7 @@ export async function createUser(
     email,
     role: data.role,
     active: true,
+    provider: data.provider || "local",
   });
   await audit(actor, `สร้างผู้ใช้ ${email} (Role: ${data.role})`);
   return { ok: true, id };

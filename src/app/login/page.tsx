@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/dal";
-import { demoLoginEnabled } from "@/lib/auth/credentials";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import { setLocale, setTheme } from "@/app/actions";
@@ -282,7 +281,7 @@ export default async function LoginPage({
   const theme = cookieStore.get("theme")?.value;
   const t = getDictionary(locale);
 
-  const demo = demoLoginEnabled();
+
   const supabaseReady = isSupabaseConfigured();
   const sp = await searchParams;
 

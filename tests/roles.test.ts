@@ -13,7 +13,7 @@ import {
   updateUser,
 } from "@/lib/data/repo";
 import { can, canView, pagesFor } from "@/lib/permissions";
-import type { Profile } from "@/lib/types";
+import type { Profile, Role } from "@/lib/types";
 
 const adminActor: Profile = {
   id: "u1",
