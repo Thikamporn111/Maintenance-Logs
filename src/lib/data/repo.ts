@@ -375,7 +375,7 @@ export async function createUser(
         });
 
         const passwordToUse = isGoogle ? crypto.randomUUID() + "Gg!" : (data.password || "Plant123456!");
-        const userMetadata: any = { full_name: data.name, role: data.role };
+        const userMetadata: Record<string, string> = { full_name: data.name, role: data.role };
         if (isGoogle) userMetadata.provider_id = "google";
 
         const { data: newUser, error: authError } = await adminSupabase.auth.admin.createUser({

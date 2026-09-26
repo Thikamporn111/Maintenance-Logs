@@ -1026,7 +1026,6 @@ export function RoleManagementPanel({
             {roles.map((r) => {
               const count = userCountByRole.get(r.id) ?? 0;
               const isSystemRole = Boolean(r.isSystem || r.id === "admin" || r.id === "technician" || r.id === "viewer");
-              const canDelete = !isSystemRole && count === 0;
 
               return (
                 <tr key={r.id}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useEffect } from "react";
+import { useActionState, useState } from "react";
 import { login, signInWithGoogle } from "./actions";
 import { FormError } from "@/components/ui";
 import { Icon } from "@/components/icons";
@@ -50,10 +50,11 @@ export function LoginForm({
   const isEn = locale === "en";
   const isEmailFilled = email.trim().length > 3 && email.includes("@");
 
-  // รีเซ็ตสถานะการเคลียร์ error เมื่อมีการ submit ใหม่แล้วได้ผลลัพธ์กลับมา
-  useEffect(() => {
+  const [prevLoginState, setPrevLoginState] = useState(loginState);
+  if (loginState !== prevLoginState) {
+    setPrevLoginState(loginState);
     setClearedErrors({});
-  }, [loginState]);
+  }
 
   const hasEmailError = Boolean(loginState.errors?.email && !clearedErrors.email);
   const hasPasswordError = Boolean(loginState.errors?.password && !clearedErrors.password);
